@@ -23,10 +23,14 @@ class World():
         self.maxX = config.worldLength - 1
         self.maxY = config.worldBreadth - 1
 
+        # TODO fix bug in location code below
+        # No check is made to see if square picked at random is empty, if not previous occupant is overwritten!
+
         # Wumpus
         self.wLoc = []
         for i in range(config.numberOfWumpus):
             self.wLoc.append(utils.pickRandomPose(self.maxX, self.maxY))
+            #print ('Wumpus at:' + str(self.wLoc[-1].x) + ',' + str(self.wLoc[-1].y))
 
         # Link
         self.lLoc = utils.pickRandomPose(self.maxX, self.maxY)
@@ -35,12 +39,16 @@ class World():
         self.gLoc = []
         for i in range(config.numberOfGold):
             self.gLoc.append(utils.pickRandomPose(self.maxX, self.maxY))
-
+            # print ('Gold at:' + str(self.gLoc[-1].x) + ',' + str(self.gLoc[-1].y))
         # Pits
         self.pLoc = []
         for i in range(config.numberOfPits):
             self.pLoc.append(utils.pickRandomPose(self.maxX, self.maxY))
+            #print ('Pit at:' + str(self.pLoc[-1].x) + ',' + str(self.pLoc[-1].y))
 
+        # Link
+        # Moved to execute last to avoid being overwritten by gold, pit or Wunpus
+        self.lLoc = utils.pickRandomPose(self.maxX, self.maxY)
         # Game state
         self.status = State.PLAY
 
