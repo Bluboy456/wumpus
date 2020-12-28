@@ -28,7 +28,7 @@ while not(gameWorld.isEnded()):
     # Uncomment this for a printout of world state
     # utils.printGameState(gameWorld)
     display.update()
-    time.sleep(1)
+    time.sleep(2)
 
 if gameWorld.status == utils.State.WON:
     print("You won!")

@@ -28,8 +28,7 @@ class Pose():
     x = 0
     y = 0
 
-    def print(self):
-        print('[', self.x, ',', self.y, ']')
+
 
 # Check if two game elements are in the same location
 def sameLocation(pose1, pose2):

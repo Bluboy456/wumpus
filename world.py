@@ -6,6 +6,10 @@
 #
 # Written by: Simon Parsons
 # Last Modified: 25/08/20
+#
+# Modified by: Stuart Jessup
+# Last Modified 28/12/20
+# Now always places itemsin a vacant square
 
 import random
 import config
@@ -23,32 +27,83 @@ class World():
         self.maxX = config.worldLength - 1
         self.maxY = config.worldBreadth - 1
 
-        # TODO fix bug in location code below
-        # No check is made to see if square picked at random is empty, if not previous occupant is overwritten!
+        self.occupied_locations = []          #list of locations that already have something there
+    
 
+        def test_for_vacant(trial_pose):
+            for pose in self.occupied_locations:
+                if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
+                    return False
+                else:
+                    return True
+        
         # Wumpus
         self.wLoc = []
+        vacant = True
         for i in range(config.numberOfWumpus):
-            self.wLoc.append(utils.pickRandomPose(self.maxX, self.maxY))
-            #print ('Wumpus at:' + str(self.wLoc[-1].x) + ',' + str(self.wLoc[-1].y))
+            while True:
+                trial_pose = utils.pickRandomPose(self.maxX, self.maxY)  
+                print('trial pose.x:', str(trial_pose.x) , 'trial pose.y:', str(trial_pose.y))
+                for pose in self.occupied_locations:
+                    print('pose.x:', str(pose.x), 'pose.y:', str(pose.y))
+                    if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
+                        vacant = False
+                        print ('vacant: ', vacant)
 
-        # Link
-        self.lLoc = utils.pickRandomPose(self.maxX, self.maxY)
+                if vacant == True:
+                    self.wLoc.append(trial_pose)
+                    self.occupied_locations.append(trial_pose)
+                    break
 
+
+    
         # Gold
         self.gLoc = []
-        for i in range(config.numberOfGold):
-            self.gLoc.append(utils.pickRandomPose(self.maxX, self.maxY))
-            # print ('Gold at:' + str(self.gLoc[-1].x) + ',' + str(self.gLoc[-1].y))
+        vacant = True
+        for i in range(config.numberOfWumpus):
+            while True:
+                trial_pose = utils.pickRandomPose(self.maxX, self.maxY)  
+                vacant = True
+                for pose in self.occupied_locations:
+                    if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
+                        vacant = False
+
+                if vacant == True:
+                    self.gLoc.append(trial_pose)
+                    self.occupied_locations.append(trial_pose)
+                    break
+
         # Pits
         self.pLoc = []
-        for i in range(config.numberOfPits):
-            self.pLoc.append(utils.pickRandomPose(self.maxX, self.maxY))
-            #print ('Pit at:' + str(self.pLoc[-1].x) + ',' + str(self.pLoc[-1].y))
 
-        # Link
-        # Moved to execute last to avoid being overwritten by gold, pit or Wunpus
-        self.lLoc = utils.pickRandomPose(self.maxX, self.maxY)
+        for i in range(config.numberOfWumpus):
+            while True:
+                trial_pose = utils.pickRandomPose(self.maxX, self.maxY) 
+                vacant = True 
+                for pose in self.occupied_locations:
+                    if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
+                        vacant = False
+
+                if vacant == True:
+                    self.pLoc.append(trial_pose)
+                    self.occupied_locations.append(trial_pose)
+                    break
+
+         # Link
+
+        while True:
+            trial_pose = utils.pickRandomPose(self.maxX, self.maxY)
+            vacant = True 
+            for pose in self.occupied_locations:
+                if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
+                    vacant = False
+
+            if vacant == True:
+                self.lLoc = trial_pose
+                self.occupied_locations.append(trial_pose)
+                break
+
+
         # Game state
         self.status = State.PLAY
 

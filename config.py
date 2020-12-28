@@ -7,13 +7,13 @@
 # Last Modified: 25/08/20
 
 # Dimensions in terms of the numbers of rows and columns
-worldLength = 3
+worldLength = 4
 worldBreadth = 4
 
 # Features
-numberOfWumpus = 1
-numberOfPits = 1
-numberOfGold = 1
+numberOfWumpus = 2
+numberOfPits = 2
+numberOfGold = 2
 
 # Control dynamism
 #
