@@ -29,13 +29,6 @@ class World():
 
         self.occupied_locations = []          #list of locations that already have something there
     
-
-        def test_for_vacant(trial_pose):
-            for pose in self.occupied_locations:
-                if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
-                    return False
-                else:
-                    return True
         
         # Wumpus
         self.wLoc = []
@@ -43,12 +36,9 @@ class World():
         for i in range(config.numberOfWumpus):
             while True:
                 trial_pose = utils.pickRandomPose(self.maxX, self.maxY)  
-                print('trial pose.x:', str(trial_pose.x) , 'trial pose.y:', str(trial_pose.y))
                 for pose in self.occupied_locations:
-                    print('pose.x:', str(pose.x), 'pose.y:', str(pose.y))
                     if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
                         vacant = False
-                        print ('vacant: ', vacant)
 
                 if vacant == True:
                     self.wLoc.append(trial_pose)
@@ -60,7 +50,7 @@ class World():
         # Gold
         self.gLoc = []
         vacant = True
-        for i in range(config.numberOfWumpus):
+        for i in range(config.numberOfGold):
             while True:
                 trial_pose = utils.pickRandomPose(self.maxX, self.maxY)  
                 vacant = True
@@ -76,7 +66,7 @@ class World():
         # Pits
         self.pLoc = []
 
-        for i in range(config.numberOfWumpus):
+        for i in range(config.numberOfPits):
             while True:
                 trial_pose = utils.pickRandomPose(self.maxX, self.maxY) 
                 vacant = True 
@@ -273,7 +263,7 @@ class World():
             
     # Move the Wumpus if that is appropriate
     #
-    # Need a decrementDifference function to tidy things up
+    # TODO - stop Wumpus moving over pits
     #
     def updateWumpus(self):
         if config.dynamic:

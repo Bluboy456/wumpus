@@ -17,16 +17,17 @@ from dungeon import Dungeon
 import random
 import utils
 from utils import Directions, Pose
+import math
 
 
 
 class Link():
 
-    def __init__(self, dungeon):
+    def __init__(self, world):
 
         # Make a copy of the world an attribute, so that Link can
         # query the state of the world
-        self.gameWorld = dungeon
+        self.gameWorld = world
 
         # size of the world - indexed to 0
         self.maxX = self.gameWorld.getMaxX()
@@ -59,13 +60,16 @@ class Link():
         self.discountFactor = 0.9
         
     def makeMove(self):
-        #development code for MDP algorithm, it does not return any commands yet
+        self.gameWorld.updateWumpus()
         self.constructOccupancyMatrix()
         self.constructRewardMatrix()
         self.constructTransisitionMatrix()
         self.valueIteration()
 
+        
         return(self.move_me())
+
+
 
 
     def constructOccupancyMatrix(self):
@@ -75,25 +79,22 @@ class Link():
         self.OccupancyMatrix = np.full((self.maxX+1, self.maxY+1), self.EMPTY)
 
         #add Wumpus(s)
-        wumpusLoc = self.gameWorld.getWumpusLocation()
-        for pose in wumpusLoc:
-            #print ('Wumpus at ' + str (pose.x) + str (pose.y)) #DEBUG
+        self.wumpusLoc = self.gameWorld.getWumpusLocation()
+        for pose in self.wumpusLoc:
             self.OccupancyMatrix[pose.x, pose.y] = self.WUMPUS 
 
         #add Pit(s)
         pitLoc = self.gameWorld.getPitsLocation()
         for pose in pitLoc:
-            #print ('Pit at ' + str (pose.x) + str (pose.y)) #DEBUG
             self.OccupancyMatrix[pose.x, pose.y] = self.PIT
 
         #add Gold(s)
         goldLoc = self.gameWorld.getGoldLocation()
         for pose in goldLoc:
-            #print ('Gold at ' + str (pose.x) + str (pose.y))  #DEBUG
+
             self.OccupancyMatrix[pose.x, pose.y] = self.GOLD        
 
-        print ('occupnacy matrix:')  #DEBUG
-        print(self.OccupancyMatrix) #DEBUG
+        #print ('occupancy matrix:', '\n', self.OccupancyMatrix) #DEBUG
 
     def constructRewardMatrix(self):
     # Now construct a reward array in a format supported by MPDToolbox
@@ -105,7 +106,6 @@ class Link():
         self.RewardArray = np.zeros([self.numSquares,4], dtype=int)
         for x,y in np.ndindex(self.OccupancyMatrix.shape):
             i = x*(self.maxY+1)+y
-            #print ('x:', str(x), 'y:', str(y), 'i:', str(i)) #DEBUG
             if self.OccupancyMatrix[x,y] == self.EMPTY:
                 self.RewardArray[i] = [self.emptyReward, self.emptyReward, self.emptyReward, self.emptyReward]
             elif self.OccupancyMatrix[x,y] == self.GOLD:
@@ -162,29 +162,21 @@ class Link():
                 # no we can't, stay stuck
                 right_moves_2D[x, y, x, y] += self.prob_right_error
 
-            #print ('Transistion Array for Rightwards moves at : ' + str(x) +', ' + str(y))  #DEBUG
-            #print (right_moves_2D[x,y])      #DEBUG
-    
-        #print ('Complete 2D Transistion Array for Rightwards moves : ')  #DEBUG
-        #print (right_moves_2D)      #DEBUG
-
         # convert 2D transistion matrix to 1D
         right_moves_1D = np.empty([self.maxX+1,self.maxY+1, (self.maxX+1) * (self.maxY+1)], dtype = float)
         for x, y in np.ndindex(self.OccupancyMatrix.shape):
             right_moves_1D[x,y]= right_moves_2D[x,y].flatten()
 
-        #print ('Complete 1D Transistion Array for Rightwards moves : ')  #DEBUG
-        #print (right_moves_1D)      #DEBUG   
+ 
 
         # convert squares array from x,y to linear for mdptoolbox compatibility
         right_moves_mdp = np.empty([self.numSquares, self.numSquares], dtype= float)
         for x, y in np.ndindex(self.OccupancyMatrix.shape):
-            i = x*(self.maxY+1)+y
-            #print('x:', str(x), ', y:' , str(y), ', i:', str(i))  #DEBUG         
+            i = x*(self.maxY+1)+y    
             for j in range(self.numSquares):
                 right_moves_mdp[i,j] = right_moves_1D[x,y,j]    
 
-        #print ('right moves mdp array:', '\n', right_moves_mdp)  #DEBUG
+
 
         #############################################################################################
 
@@ -221,26 +213,20 @@ class Link():
                 # no we can't, stay stuck
                 left_moves_2D[x, y, x, y] += self.prob_right_error
 
-            #print ('Transistion Array for Leftwards moves at : ' + str(x) +', ' + str(y))  #DEBUG
-            #print (left_moves_2D[x,y])      #DEBUG    
 
         # convert 2D transistion matrix to 1D
         left_moves_1D = np.empty([self.maxX+1,self.maxY+1, (self.maxX+1) * (self.maxY+1)], dtype = float)
         for x, y in np.ndindex(self.OccupancyMatrix.shape):
             left_moves_1D[x,y]= left_moves_2D[x,y].flatten()         
 
-        #print ('Complete 1D Transistion Array for leftwards moves : ')  #DEBUG
-        #print (left_moves_1D)      #DEBUG      
 
         # convert squares array from x,y to linear for mdptoolbox compatibility
         left_moves_mdp = np.empty([self.numSquares, self.numSquares], dtype= float)
         for x, y in np.ndindex(self.OccupancyMatrix.shape):
-            i = x*(self.maxY+1)+y
-            #print('x:', str(x), ', y:' , str(y), ', i:', str(i))  #DEBUG         
+            i = x*(self.maxY+1)+y     
             for j in range(self.numSquares):
                 left_moves_mdp[i,j] = left_moves_1D[x,y,j]    
 
-        #print ('left moves mdp array:', '\n', left_moves_mdp)  #DEBUG
 
         #############################################################################################
 
@@ -274,21 +260,13 @@ class Link():
                 up_moves_2D[x, y, x, y+1] += self.prob_right_error
             else:
                 # no we can't, stay stuck
-                up_moves_2D[x, y, x, y] += self.prob_right_error
-
-            #print ('Transistion Array for Upwards moves at : ' + str(x) +', ' + str(y))  #DEBUG
-            #print (up_moves_2D[x,y])      #DEBUG    
+                up_moves_2D[x, y, x, y] += self.prob_right_error   
 
         # convert 2D transistion matrix to 1D
         up_moves_1D = np.empty([self.maxX+1,self.maxY+1, (self.maxX+1) * (self.maxY+1)], dtype = float)
         for x, y in np.ndindex(self.OccupancyMatrix.shape):
             up_moves_1D[x,y]= up_moves_2D[x,y].flatten()
-
-    
-
-
-        #print ('Complete 1D Transistion Array for upwards moves : ')  #DEBUG
-        #print (up_moves_1D)      #DEBUG      
+  
 
         # convert squares array from x,y to linear for mdptoolbox compatibility
         up_moves_mdp = np.empty([self.numSquares, self.numSquares], dtype= float)
@@ -338,32 +316,21 @@ class Link():
                 # no we can't, stay stuck
                 down_moves_2D[x, y, x, y] += self.prob_right_error   
 
-            #print ('Transistion Array for Downwards moves at : ' + str(x) +', ' + str(y))  #DEBUG
-            #print (down_moves_2D[x,y])      #DEBUG    
-
         # convert 2D transistion matrix to 1D
         down_moves_1D = np.empty([self.maxX+1,self.maxY+1, (self.maxX+1) * (self.maxY+1)], dtype = float)
         for x, y in np.ndindex(self.OccupancyMatrix.shape):
             down_moves_1D[x,y]= down_moves_2D[x,y].flatten()    
-
-        #print ('Complete 1D Transistion Array for downwards moves : ')  #DEBUG
-        #print (down_moves_1D)      #DEBUG    
+ 
 
         # convert squares array from x,y to linear for mdptoolbox compatibility
         down_moves_mdp = np.empty([self.numSquares, self.numSquares], dtype= float)
         for x, y in np.ndindex(self.OccupancyMatrix.shape):
-            i = x*(self.maxY+1)+y
-            #print('x:', str(x), ', y:' , str(y), ', i:', str(i))  #DEBUG         
+            i = x*(self.maxY+1)+y    
             for j in range(self.numSquares):
                 down_moves_mdp[i,j] = down_moves_1D[x,y,j]    
 
-        #print ('down moves mdp array:', '\n', down_moves_mdp)  #DEBUG
 
         #############################################################################################
-
-
-
-        ############################################################################################
 
 
 
@@ -381,19 +348,17 @@ class Link():
     def valueIteration(self):                
         self.valueMatrix = mdptoolbox.mdp.ValueIteration(self.transistion_array_mdp, self.RewardArray, self.discountFactor)
         self.valueMatrix.run()
-        # We can then display the values (utilities) computed, and look at the policy:
-        print ('Results from mdptoolbox are:')
-        print('Values:\n', self.valueMatrix.V)
-        print('Policy:\n', self.valueMatrix.policy)
+        
+        # print ('Results from mdptoolbox are:') #DEBUG
+        #print('Values:\n', self.valueMatrix.V) #DEBUG 
+        #print('Policy:\n', self.valueMatrix.policy) #DEBUG
 
 
     def move_me(self):
         myPosition = self.gameWorld.getLinkLocation()
-        #print('my position- x:', myPosition.x, 'my position- y:', myPosition.y)
         # get policy for my position
         index = myPosition.x *(self.maxY+1) + myPosition.y
         policy = self.valueMatrix.policy[index]
-        #print('policy at my position- x:', policy)
 
         # mdptoolbox poliocy actions:
         # 0 = left, 1 = right, 2 = up, 3 = down
@@ -412,6 +377,8 @@ class Link():
         elif policy == 3:
             return Directions.WEST
 
-        
+
+
+     
 
  

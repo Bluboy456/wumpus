@@ -7,18 +7,18 @@
 # Last Modified: 25/08/20
 
 # Dimensions in terms of the numbers of rows and columns
-worldLength = 4
-worldBreadth = 4
+worldLength = 10
+worldBreadth = 10
 
 # Features
-numberOfWumpus = 2
-numberOfPits = 2
+numberOfWumpus = 1
+numberOfPits = 4
 numberOfGold = 2
 
 # Control dynamism
 #
 # If dynamic is True, then the Wumpus will move.
-dynamic = False
+dynamic = True
 
 # Control observability --- NOT YET IMPLEMENTED
 #
