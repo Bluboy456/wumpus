@@ -52,6 +52,9 @@ class Link():
         self.wumpusReward = -1.1
         self.pitReward = -1.0
         self.goldReward = 1.0
+        self.smellyReward = -0.5
+        self.glittlerReward = 0.5
+        self.windyReward = -0.2
 
         # What moves are possible.
         self.moves = [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]
@@ -92,7 +95,7 @@ class Link():
         goldLoc = self.gameWorld.getGoldLocation()
         for pose in goldLoc:
 
-            self.OccupancyMatrix[pose.x, pose.y] = self.GOLD        
+            self.OccupancyMatrix[pose.x, pose.y] = self.GOLD      
 
         #print ('occupancy matrix:', '\n', self.OccupancyMatrix) #DEBUG
 
@@ -103,9 +106,10 @@ class Link():
     # x, y dimensions of occupancy matrix are flattened to 1D in the reward array
     # in the reward array with all elements equal to the reward
 
-        self.RewardArray = np.zeros([self.numSquares,4], dtype=int)
+        self.RewardArray = np.zeros([self.numSquares,4], dtype=float)
         for x,y in np.ndindex(self.OccupancyMatrix.shape):
             i = x*(self.maxY+1)+y
+            # add actual objects
             if self.OccupancyMatrix[x,y] == self.EMPTY:
                 self.RewardArray[i] = [self.emptyReward, self.emptyReward, self.emptyReward, self.emptyReward]
             elif self.OccupancyMatrix[x,y] == self.GOLD:
@@ -115,10 +119,25 @@ class Link():
             elif self.OccupancyMatrix[x,y] == self.PIT:
                     self.RewardArray[i] = [self.pitReward, self.pitReward, self.pitReward, self.pitReward]
             else:
-                raise Exception("error in coccupancy matrix")
+                raise Exception("exception: empty matrix")
 
-        #print ('MDP Reward Array: ')  #DEBUG
-        #print (self.RewardArray)      #DEBUG
+
+            
+            location = Pose()
+            location.x = x
+            location.y = y
+            #add smelly cells (next to Wumpus)
+            if self.gameWorld.isSmelly(location):
+                self.RewardArray[i] = [self.smellyReward, self.smellyReward, self.smellyReward, self.smellyReward]
+            #add glitter cells (next to Gold)
+            if self.gameWorld.isGlitter(location):
+                self.RewardArray[i] = [self.glittlerReward, self.glittlerReward, self.glittlerReward, self.glittlerReward]
+            #add windy cells (next to pit)
+            if self.gameWorld.isWindy(location):
+                self.RewardArray[i] = [self.windyReward, self.windyReward, self.windyReward, self.windyReward]
+            
+            #print ('MDP Reward Array: ')  #DEBUG
+            #print (self.RewardArray)      #DEBUG
 
 
 

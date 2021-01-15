@@ -182,6 +182,7 @@ class World():
             return True
             
     # Implements the move chosen by Link
+    # Updated SJ to return gold status - True if gold looted
     def updateLink(self, direction):
         # Set the looted flag to False
         self.looted = False
@@ -205,10 +206,12 @@ class World():
 
         # Did Link just loot some gold?
         match = False
+        gold = False
         index = 0
         for i in range(len(self.gLoc)):
             if utils.sameLocation(self.lLoc, self.gLoc[i]):
                 match = True
+                gold = True
                 index = i
                 self.looted = True
                 print("Gold, yeah!")
@@ -217,6 +220,11 @@ class World():
         # one gold can be picked up in a given turn.
         if match:
             self.gLoc.pop(index)
+
+        if gold:
+            return True  
+        else:
+            return False
 
     # Implement nondeterministic motion, if appropriate.
     def probabilisticMotion(self, direction):
@@ -299,21 +307,21 @@ class World():
     #
     # A location is smelly if it is next to the Wumpus
     def isSmelly(self, location):
-        if isAjacent(self.Wloc, location):
+        if self.isAjacent(self.wLoc, location):
             return True
         else:
             return False
 
     # Is the given location windy? 
     def isWindy(self, location):
-        if isAjacent(self.ploc, location):
+        if self.isAjacent(self.pLoc, location):
             return True
         else:
             return False
 
      # Does the given location glitter? 
     def isGlitter(self, location):
-        if isAjacent(self.gloc, location):
+        if self.isAjacent(self.gLoc, location):
             return True
         else:
             return False
@@ -324,7 +332,7 @@ class World():
     # x coordinate and have a y coordinate that differs by 1, or in
     # the same y coordinate and have an x coordinate that differs by
     # one.
-    def isAjacent(locList, loc):
+    def isAjacent(self,locList, loc):
         for aloc in locList:
             # Ajacency holds if it holds for any location in locList.
             if aloc.x == loc.x:

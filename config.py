@@ -12,7 +12,7 @@ worldBreadth = 10
 
 # Features
 numberOfWumpus = 1
-numberOfPits = 4
+numberOfPits = 25
 numberOfGold = 2
 
 # Control dynamism
