@@ -7,6 +7,7 @@
 # Written by: Simon Parsons
 # Last Modified: 25/08/20
 # Modified by Stuart Jessup 24/12/20 through 28/1/21
+# world indexing starts top left.  x direction is DOWN/SOUTH  y direction is RIGHT/EAST
 
 import mdptoolbox
 import numpy as np
@@ -52,9 +53,9 @@ class Link():
         self.wumpusReward = -1.1
         self.pitReward = -1.0
         self.goldReward = 1.0
-        self.smellyReward = -0.5
-        self.glittlerReward = 0.5
-        self.windyReward = -0.2
+        self.smellyReward = -0.04
+        self.glittlerReward = -0.04
+        self.windyReward = -0.04
 
         # What moves are possible.
         self.moves = [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]
@@ -97,7 +98,7 @@ class Link():
 
             self.OccupancyMatrix[pose.x, pose.y] = self.GOLD      
 
-        #print ('occupancy matrix:', '\n', self.OccupancyMatrix) #DEBUG
+    #   print ('occupancy matrix:', '\n', self.OccupancyMatrix) #DEBUG
 
     def constructRewardMatrix(self):
     # Now construct a reward array in a format supported by MPDToolbox
@@ -105,13 +106,20 @@ class Link():
     # So for each element in the occupancy matrix corresponds to a 1 x 4 array 
     # x, y dimensions of occupancy matrix are flattened to 1D in the reward array
     # in the reward array with all elements equal to the reward
+    # Add in the guidance bias in a linear fashion acros  the length and/or breadth of the gameworld
 
         self.RewardArray = np.zeros([self.numSquares,4], dtype=float)
         for x,y in np.ndindex(self.OccupancyMatrix.shape):
             i = x*(self.maxY+1)+y
             # add actual objects
             if self.OccupancyMatrix[x,y] == self.EMPTY:
-                self.RewardArray[i] = [self.emptyReward, self.emptyReward, self.emptyReward, self.emptyReward]
+                self.bias = 0
+                if config.biasLeft: self.bias += config.maxBias * (self.maxX - x)/self.maxX
+                if config.biasRight: self.bias += config.maxBias * (x+1)/self.maxX
+                if config.biasUp: self.bias += config.maxBias * (self.maxY-1 - y)/self.maxY
+                if config.biasDown: self.bias  += config.maxBias * (y+1)/self.maxY
+                self.RewardArray[i] = [self.emptyReward + self.bias, self.emptyReward + self.bias, 
+                                       self.emptyReward + self.bias, self.emptyReward + self.bias]
             elif self.OccupancyMatrix[x,y] == self.GOLD:
                     self.RewardArray[i] = [self.goldReward, self.goldReward, self.goldReward, self.goldReward]
             elif self.OccupancyMatrix[x,y] == self.WUMPUS:
@@ -121,23 +129,26 @@ class Link():
             else:
                 raise Exception("exception: empty matrix")
 
-
             
             location = Pose()
             location.x = x
             location.y = y
-            #add smelly cells (next to Wumpus)
+
+            # don't change reward for cells adjacent to Gold, Wumpus or Pits
+            '''
+            # smelly cells (next to Wumpus)
             if self.gameWorld.isSmelly(location):
                 self.RewardArray[i] = [self.smellyReward, self.smellyReward, self.smellyReward, self.smellyReward]
-            #add glitter cells (next to Gold)
+            #add reward for glitter cells (next to Gold)
             if self.gameWorld.isGlitter(location):
                 self.RewardArray[i] = [self.glittlerReward, self.glittlerReward, self.glittlerReward, self.glittlerReward]
-            #add windy cells (next to pit)
+            #add reward for windy cells (next to pit)
             if self.gameWorld.isWindy(location):
                 self.RewardArray[i] = [self.windyReward, self.windyReward, self.windyReward, self.windyReward]
-            
-            #print ('MDP Reward Array: ')  #DEBUG
-            #print (self.RewardArray)      #DEBUG
+            '''
+        #print ('Reward Array: ')  #DEBUG
+        #print (self.RewardArray)      #DEBUG
+        input()
 
 
 

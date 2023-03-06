@@ -21,12 +21,19 @@ class State(Enum):
     PLAY = 0
     WON  = 1
     LOST = 2
+    PIT = 3
+    WUMPUS = 4
 
 # Class to represent the position of elements within the game
 #
 class Pose():
     x = 0
     y = 0
+
+class Event(Enum):
+    WON = 1
+    PIT = 2
+    WUMPUS = 3
 
 
 
@@ -55,16 +62,20 @@ def pickRandomPose(x, y):
 def printGameState(world):
     print("Wumpus:")
     for i in range(len(world.getWumpusLocation())):
-        world.getWumpusLocation()[i].print()
+        location = world.getWumpusLocation()[i]
+        print (location.x, location.y)
         
     print("Link:")
-    world.getLinkLocation().print()
+    location = world.getLinkLocation()
+    print (location.x, location.y)
 
     print("Gold:")
     for i in range(len(world.getGoldLocation())):
-        world.getGoldLocation()[i].print()
+        location = world.getGoldLocation()[i]
+        print (location.x, location.y)
 
     print("Pits:")
     for i in range(len(world.getPitsLocation())):
-        world.getPitsLocation()[i].print()
+        location = world.getPitsLocation()[i]
+        print (location.x, location.y)
 

@@ -32,9 +32,9 @@ class World():
         
         # Wumpus
         self.wLoc = []
-        vacant = True
         for i in range(config.numberOfWumpus):
             while True:
+                vacant = True   #MODIFIED SJ - moved inside loop to fix infinite loop SJ
                 trial_pose = utils.pickRandomPose(self.maxX, self.maxY)  
                 for pose in self.occupied_locations:
                     if pose.x == trial_pose.x and pose.y == trial_pose.y:    #location is already taken
@@ -49,9 +49,9 @@ class World():
     
         # Gold
         self.gLoc = []
-        vacant = True
         for i in range(config.numberOfGold):
             while True:
+                vacant = True   #MODIFIED SJ - moved inside loop to fix infinite loop SJ
                 trial_pose = utils.pickRandomPose(self.maxX, self.maxY)  
                 vacant = True
                 for pose in self.occupied_locations:
@@ -65,7 +65,6 @@ class World():
 
         # Pits
         self.pLoc = []
-
         for i in range(config.numberOfPits):
             while True:
                 trial_pose = utils.pickRandomPose(self.maxX, self.maxY) 
@@ -90,6 +89,8 @@ class World():
 
             if vacant == True:
                 self.lLoc = trial_pose
+                print('Initial Link Pose')  #DEBUG
+                print(self.lLoc.x, self.lLoc.y)  #DEBUG
                 self.occupied_locations.append(trial_pose)
                 break
 
@@ -139,15 +140,17 @@ class World():
 
     # Does Link feel the wind?
     def linkWindy(self):
-        return isWindy(lLoc)
+        return self.isWindy(self.lLoc)
 
     # Does Link smell the Wumpus?
     def linkSmelly(self):
-        return isSmelly(lLoc)
+        print('Link location ')  #DEBUG
+        print(self.lLoc.x, self.lLoc.y) #DEBUG
+        return self.isSmelly(self.lLoc)
 
     # Does Link see the glitter?
     def linkGlitter(self):
-        return isGlitter(lLoc)
+        return self.isGlitter(self.lLoc)
  
     #
     # Methods
@@ -163,31 +166,71 @@ class World():
             if utils.sameLocation(self.lLoc, self.wLoc[i]):
                 print("Oops! Met the Wumpus")
                 dead = True
-                self.status = State.LOST
+                self.status = State.WUMPUS
                 
         # Did Link fall in a Pit?
         for i in range(len(self.pLoc)):
             if utils.sameLocation(self.lLoc, self.pLoc[i]):
                 print("Arghhhhh! Fell in a pit")
                 dead = True
-                self.status = State.LOST
+                self.status = State.PIT
 
         # Did Link loot all the gold?
         if len(self.gLoc) == 0:
             won = True
             self.status = State.WON
             
-        if dead == True or won == True:
+        if self.status == State.PIT or self.status == State.WUMPUS or self.status == State.WON:
             print("Game Over!")
             return True
+        else:
+            return False
             
     # Implements the move chosen by Link
+    # config definitions
+    # right = SOUTH, left = NORTH, up = EAST, down = WEST
     # Updated SJ to return gold status - True if gold looted
     def updateLink(self, direction):
         # Set the looted flag to False
         self.looted = False
-        # Implement non-determinism if appropriate
-        direction = self.probabilisticMotion(direction)
+
+        # Human overide to move link if adjacent to occupied square
+        # if True:  #DEBUG
+        if self.linkWindy() and config.localGuidance == True:
+            print('Help, I am next to a pit, please move me away')
+            print ('Enter the safe direction to move (l/r/u/d)')
+            safe_direction = input()
+            if safe_direction == 'd': direction = Directions.NORTH
+            if safe_direction == 'u': direction = Directions.SOUTH
+            if safe_direction == 'r': direction = Directions.EAST
+            if safe_direction == 'l': direction = Directions.WEST
+               
+        elif self.linkSmelly() and config.localGuidance == True:
+            print('Help, I am next to a Wumpus, please move me away')
+            print ('Enter the safe direction to move (l/r/u/d)')
+            safe_direction = input()
+            if safe_direction == 'l': direction == Directions.WEST
+            if safe_direction == 'r': direction == Directions.EAST
+            if safe_direction == 'u': direction == Directions.NORTH
+            if safe_direction == 'd': direction == Directions.SOUTH    
+
+        elif self.linkGlitter() and config.localGuidance == True:
+            print('I am next to gold, please help me loot it')
+            print ('Enter the direction to move (l/r/u/d)')
+            safe_direction = input()
+            if safe_direction == 'l': direction == Directions.WEST
+            if safe_direction == 'r': direction == Directions.EAST
+            if safe_direction == 'u': direction == Directions.NORTH
+            if safe_direction == 'd': direction == Directions.SOUTH    
+            
+        
+        # If not next to anything direction is probablitic based on Value Interation
+        else: direction = self.probabilisticMotion(direction)
+
+
+
+
+
         if direction == Directions.NORTH:
             if self.lLoc.y < self.maxY:
                 self.lLoc.y = self.lLoc.y + 1
@@ -307,21 +350,21 @@ class World():
     #
     # A location is smelly if it is next to the Wumpus
     def isSmelly(self, location):
-        if self.isAjacent(self.wLoc, location):
+        if self.isAjacent(self.wLoc, location): #MODIFIED SJ - wloc to wLoc
             return True
         else:
             return False
 
     # Is the given location windy? 
     def isWindy(self, location):
-        if self.isAjacent(self.pLoc, location):
+        if self.isAjacent(self.pLoc, location): #MODIFIED SJ - ploc to pLoc
             return True
         else:
             return False
 
      # Does the given location glitter? 
     def isGlitter(self, location):
-        if self.isAjacent(self.gLoc, location):
+        if self.isAjacent(self.gLoc, location): #MODIFIED SJ - gloc to gLoc
             return True
         else:
             return False
@@ -334,14 +377,22 @@ class World():
     # one.
     def isAjacent(self,locList, loc):
         for aloc in locList:
+            print ('link:')  #DEBUG
+            print (loc.x, loc.y)   #DEBUG
+            print ('thing')  #DEBUG
+            print (locList[0].x, locList[0].y)   #DEBUG
             # Ajacency holds if it holds for any location in locList.
             if aloc.x == loc.x:
                 if aloc.y == loc.y + 1 or aloc.y == loc.y - 1:
+                    print('adjacent, same x\n')
                     return True
                 else:
+
+
                     return False
             elif aloc.y == loc.y:
                 if aloc.x == loc.x + 1 or aloc.x == loc.x - 1:
+                    print('adjacent, same y\n')
                     return True
                 else:
                     return False
