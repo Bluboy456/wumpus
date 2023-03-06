@@ -89,8 +89,8 @@ class World():
 
             if vacant == True:
                 self.lLoc = trial_pose
-                print('Initial Link Pose')  #DEBUG
-                print(self.lLoc.x, self.lLoc.y)  #DEBUG
+                #print('Initial Link Pose')  #DEBUG
+                #print(self.lLoc.x, self.lLoc.y)  #DEBUG
                 self.occupied_locations.append(trial_pose)
                 break
 
@@ -144,8 +144,8 @@ class World():
 
     # Does Link smell the Wumpus?
     def linkSmelly(self):
-        print('Link location ')  #DEBUG
-        print(self.lLoc.x, self.lLoc.y) #DEBUG
+        #print('Link location ')  #DEBUG
+        #print(self.lLoc.x, self.lLoc.y) #DEBUG
         return self.isSmelly(self.lLoc)
 
     # Does Link see the glitter?
@@ -198,7 +198,7 @@ class World():
         # if True:  #DEBUG
         if self.linkWindy() and config.localGuidance == True:
             print('Help, I am next to a pit, please move me away')
-            print ('Enter the safe direction to move (l/r/u/d)')
+            print ('Enter the direction to move me(l/r/u/d)')
             safe_direction = input()
             if safe_direction == 'd': direction = Directions.NORTH
             if safe_direction == 'u': direction = Directions.SOUTH
@@ -207,7 +207,7 @@ class World():
                
         elif self.linkSmelly() and config.localGuidance == True:
             print('Help, I am next to a Wumpus, please move me away')
-            print ('Enter the safe direction to move (l/r/u/d)')
+            print ('Enter the direction to move me (l/r/u/d)')
             safe_direction = input()
             if safe_direction == 'l': direction == Directions.WEST
             if safe_direction == 'r': direction == Directions.EAST
@@ -216,7 +216,7 @@ class World():
 
         elif self.linkGlitter() and config.localGuidance == True:
             print('I am next to gold, please help me loot it')
-            print ('Enter the direction to move (l/r/u/d)')
+            print ('Enter the direction to move me (l/r/u/d)')
             safe_direction = input()
             if safe_direction == 'l': direction == Directions.WEST
             if safe_direction == 'r': direction == Directions.EAST
@@ -340,9 +340,15 @@ class World():
     # Move value towards target.
     def reduceDifference(self, value, target):
         if value < target:
-            return value+1
+            if random.random() < config.wumpusSpeed:  #control average speed of Wumpus
+                return value+1
+            else:
+                return value
         elif value > target:
-            return value-1
+            if random.random() < config.wumpusSpeed:
+                return value-1
+            else:
+                return value
         else:
             return value
 
@@ -377,26 +383,17 @@ class World():
     # one.
     def isAjacent(self,locList, loc):
         for aloc in locList:
-            print ('link:')  #DEBUG
-            print (loc.x, loc.y)   #DEBUG
-            print ('thing')  #DEBUG
-            print (locList[0].x, locList[0].y)   #DEBUG
+            #print ('link:')  #DEBUG
+            #print (loc.x, loc.y)   #DEBUG
+            #print ('thing')  #DEBUG
+            #print (locList[0].x, locList[0].y)   #DEBUG
             # Ajacency holds if it holds for any location in locList.
             if aloc.x == loc.x:
                 if aloc.y == loc.y + 1 or aloc.y == loc.y - 1:
-                    print('adjacent, same x\n')
                     return True
-                else:
-
-
-                    return False
             elif aloc.y == loc.y:
                 if aloc.x == loc.x + 1 or aloc.x == loc.x - 1:
-                    print('adjacent, same y\n')
                     return True
-                else:
-                    return False
-            else:
-                return False
+        return False
             
             

@@ -41,11 +41,11 @@ while game_no > 0:
     display = Dungeon(gameWorld)
 
     # set up Guidance Type
-    # guidance = input('Would you like to help the Link (y/n)?\n')
-    guidance = 'y'   #DEBUG
+    guidance = input('Would you like to help the Link (y/n)?\n')
+    #guidance = 'y'   #DEBUG
     if guidance == 'y':
-        #adviceType = input('Do you want to give general or local advice? (g/l)\n')
-        adviceType = 'l'  #DEBUG
+        adviceType = input('Do you want to give general or local advice? (g/l)\n')
+        #adviceType = 'l'  #DEBUG
         if adviceType == 'g':
             biasDirection = input('Which direction would you advise the Link to move in (n,ne,e,se,s,sw,w,nw? \n')
             config.biasUp = ('n'in biasDirection) 
@@ -58,11 +58,8 @@ while game_no > 0:
               config.localGuidance = True
 
 
-        
-
     move_count = 0  
     while not(gameWorld.isEnded()):
-        utils.printGameState(gameWorld)  #DEBUG
         if gameWorld.updateLink(player.makeMove()):  #returns True if some gold looted
             gold_count +=1
         gameWorld.updateWumpus()

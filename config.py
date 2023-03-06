@@ -16,13 +16,15 @@ worldBreadth = 8
 
 # Features
 numberOfWumpus = 1
-numberOfPits = 3
+numberOfPits = 20
 numberOfGold = 1
 
 # Control dynamism
 #
 # If dynamic is True, then the Wumpus will move.
-dynamic = False
+dynamic = True
+# 1 is maximum speed, 0 is stationary
+wumpusSpeed = 0.5
 
 # Control observability --- NOT YET IMPLEMENTED
 #

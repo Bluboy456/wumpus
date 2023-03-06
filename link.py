@@ -148,7 +148,7 @@ class Link():
             '''
         #print ('Reward Array: ')  #DEBUG
         #print (self.RewardArray)      #DEBUG
-        input()
+        #input() #DEBUG step through each move
 
 
 
