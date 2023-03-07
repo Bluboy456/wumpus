@@ -318,9 +318,12 @@ class World():
     #
     def updateWumpus(self):
         if config.dynamic:
+            #save Wumpus location before any move
+            
             # Head towards Link
             target = self.lLoc
             for i in range(len(self.wLoc)):
+                wumpusInitial = self.wLoc[i]
                 # If same x-coordinate, move in the y direction
                 if self.wLoc[i].x == target.x:
                     self.wLoc[i].y = self.reduceDifference(self.wLoc[i].y, target.y)        
@@ -335,7 +338,10 @@ class World():
                     if dice > 0.5:
                         self.wLoc[i].y = self.reduceDifference(self.wLoc[i].y, target.y)        
                     else:
-                        self.wLoc[i].x = self.reduceDifference(self.wLoc[i].x, target.x)        
+                        self.wLoc[i].x = self.reduceDifference(self.wLoc[i].x, target.x)     
+                # Check whether Wumpus would be in a pit, if so don't move
+                if self.isAjacent(self.pLoc, self.wLoc[i]):
+                    self.wLoc[i] = wumpusInitial
 
     # Move value towards target.
     def reduceDifference(self, value, target):
